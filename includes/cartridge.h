@@ -22,9 +22,9 @@ struct ROM_data{
 extern uint8_t *ROM;
 extern int ROM_size;
 extern char* title;
-extern struct ROM_data * rom_data;
+extern struct ROM_data rom_data;
 
-uint8_t cartridge_load(char* filename);
+uint8_t cartridge_load(char* filename, struct ROM_data *rom_data);
 
-uint8_t read_ROM(uint16_t address);
-void write_ROM(uint16_t address);
+uint8_t read_ROM(uint16_t address, struct ROM_data *rom_data);
+void write_ROM(uint16_t address, struct ROM_data *rom_data);

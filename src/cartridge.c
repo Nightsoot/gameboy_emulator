@@ -1,11 +1,11 @@
 #include "../includes/cartridge.h"
 
 //ROM can be variable size
+uint8_t *cart_RAM;
 uint8_t *ROM;
 int ROM_size;
 char* title;
-struct ROM_data rd;
-struct ROM_data * rom_data = &rd;
+struct ROM_data rom_data;
 
 //reference arrays from Low Level Devel
 static const char *ROM_TYPES[] = {
@@ -110,7 +110,7 @@ static const char *LIC_CODE[0xA5] = {
     [0xA4] = "Konami (Yu-Gi-Oh!)"
 };
 
-const char *cart_lic_name() {
+const char *cart_lic_name(struct ROM_data *rom_data) {
     if (rom_data->new_lic_code <= 0xA4) {
         return LIC_CODE[rom_data->lic_code];
     }
@@ -118,7 +118,7 @@ const char *cart_lic_name() {
     return "UNKNOWN";
 }
 
-const char *cart_type_name() {
+const char *cart_type_name(struct ROM_data *rom_data) {
     if (rom_data->type <= 0x22) {
         return ROM_TYPES[rom_data->type];
     }
@@ -127,7 +127,7 @@ const char *cart_type_name() {
 }
 
 
-uint8_t read_cartridge(char* filename){
+uint8_t read_cartridge(char* filename, struct ROM_data *rom_data){
 
     FILE * file_pointer = fopen(filename, "r");
 
@@ -140,25 +140,23 @@ uint8_t read_cartridge(char* filename){
     }
 
     fseek(file_pointer, 0, SEEK_END);
-    printf("file_pointer: %p\n", );
-    rom_data->rom_size = ftell(file_pointer);
-
-
+    ROM_size = ftell(file_pointer);
     rewind(file_pointer);
 
-    ROM = (uint8_t *) malloc(rom_data->rom_size);
-    fread(ROM, rom_data->rom_size, 1, file_pointer);
+    ROM = (uint8_t *) malloc(ROM_size);
+    fread(ROM, ROM_size, 1, file_pointer);
     fclose(file_pointer);
 
     rom_data = (struct ROM_data *)(ROM + 0x100);
     rom_data->title[15] = 0;
+    printf("f: %d\n", ROM[0x101]);
 
     printf("Cartridge Loaded:\n");
     printf("\t Title    : %s\n", rom_data->title);
-    printf("\t Type     : %2.2X (%s)\n", rom_data->type, cart_type_name());
+    printf("\t Type     : %2.2X (%s)\n", rom_data->type, cart_type_name(rom_data));
     printf("\t ROM Size : %d KB\n", 32 << rom_data->rom_size);
     printf("\t RAM Size : %2.2X\n", rom_data->ram_size);
-    printf("\t LIC Code : %2.2X (%s)\n", rom_data->lic_code, cart_lic_name());
+    printf("\t LIC Code : %2.2X (%s)\n", rom_data->lic_code, cart_lic_name(rom_data));
     printf("\t ROM Vers : %2.2X\n", rom_data->version);
 
     uint16_t x = 0;
@@ -172,8 +170,11 @@ uint8_t read_cartridge(char* filename){
 }
 
 int main(void){
-    read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/Pokemon - Red Version (USA, Europe) (SGB Enhanced).gb");
-    for(int i=0; i<rom_data->rom_size; i++){
-        printf("%x\n", ROM[i]); 
-    }
+    // read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/01-special.gb", &rom_data);
+    // read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/Pokemon - Red Version (USA, Europe) (SGB Enhanced).gb", &rom_data);
+    read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/dmg-acid2.gb", &rom_data);
+    printf("%d\n", rom_data.rom_size);
+    for (int i = 0x134; i <= 0x14F; i++) {
+    printf("ROM[%x] = 0x%x\n", i, ROM[i]);
+}
 }
