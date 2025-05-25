@@ -1,2 +1,2 @@
-registers: src/cartridge.c
-	gcc src/cartridge.c -o cartridge
+opcodes: src/
+	cd src && gcc *.c -o opcodes

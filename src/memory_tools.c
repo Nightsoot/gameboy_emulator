@@ -11,7 +11,7 @@ uint8_t read_memory(uint16_t address){
         //TODO
     }
     else if(address < WRAM_END){
-        //TODO
+        wram_read(address);
     }
     else if(address < ERAM_END){
         //TODO
@@ -26,7 +26,7 @@ uint8_t read_memory(uint16_t address){
         //TODO
     }
     else if(address < HRAM_END){
-        //TODO
+        hram_read(address);
     }
     else if(address == 0xFFFF){
         //TODO
@@ -49,7 +49,7 @@ void write_memory(uint16_t address, uint8_t value){
         //TODO
     }
     else if(address < WRAM_END){
-        //TODO
+        wram_write(address, value);
     }
     else if(address < ERAM_END){
         //TODO
@@ -66,7 +66,7 @@ void write_memory(uint16_t address, uint8_t value){
         //TODO
     }
     else if(address < HRAM_END){
-        //TODO
+        hram_write(address, value);
     }
     else if(address == 0xFFFF){
         //TODO
@@ -74,8 +74,6 @@ void write_memory(uint16_t address, uint8_t value){
     else{
         printf("Address out of range\n");
     }
-
-    return 0;
 }
 
 uint16_t double_read_memory(uint16_t address){

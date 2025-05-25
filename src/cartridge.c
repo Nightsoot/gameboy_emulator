@@ -169,12 +169,12 @@ uint8_t read_cartridge(char* filename, struct ROM_data *rom_data){
     return 1;
 }
 
-int main(void){
-    // read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/01-special.gb", &rom_data);
-    // read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/Pokemon - Red Version (USA, Europe) (SGB Enhanced).gb", &rom_data);
-    read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/dmg-acid2.gb", &rom_data);
-    printf("%d\n", rom_data.rom_size);
-    for (int i = 0x134; i <= 0x14F; i++) {
-    printf("ROM[%x] = 0x%x\n", i, ROM[i]);
-}
-}
+// int main(void){
+//     // read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/01-special.gb", &rom_data);
+//     // read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/Pokemon - Red Version (USA, Europe) (SGB Enhanced).gb", &rom_data);
+//     read_cartridge("/home/david-rice/Downloads/gameboy_emulator/ROMs/dmg-acid2.gb", &rom_data);
+//     printf("%d\n", rom_data.rom_size);
+//     for (int i = 0x134; i <= 0x14F; i++) {
+//     printf("ROM[%x] = 0x%x\n", i, ROM[i]);
+// }
+// }

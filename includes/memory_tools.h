@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "ram.h"
+
 #define ROM_END 0x8000
 #define VRAM_END 0xA000
 #define EXT_RAM_END 0xC000
