@@ -64,12 +64,16 @@ flags = {
     "n": "registers.AF_reg.sub.F_reg.flags.n",
 }
 
+two_byte_instructions = []
+three_byte_instructions = []
+
 
 def ld_ops():
     const = 0b00000001
     #ld with r16
     for i in range(0, 4):
         print(f"case(0x{(const + (i<<4)):02X}):")
+        three_byte_instructions.append(f"0x{(const + (i<<4)):02X}")
         print(f"    {u16_regs[i]} = imm16;")
         print(f"    return 12;")
         
@@ -90,6 +94,7 @@ def ld_ops():
     #special case
     print(f"case(0x08):")
     print(f"    write_memory(imm16, registers.SP);")
+    three_byte_instructions.append(f"0x08")
     print(f"    return 20;")
         
         
@@ -101,7 +106,7 @@ def inc_r16():
         print(f"    return 8;")
         
 def dec_r16():
-    const = 0b00001001
+    const = 0b00001011
     for i in range(0, 4):
         print(f"case(0x{(const + (i<<4)):02X}):")
         print(f"    {u16_regs[i]}--;")
@@ -143,6 +148,7 @@ def ld_r8():
         print(f"case(0x{(const + (i<<3)):02X}):")
         print(f"    {u8_regs_write[i]} = imm8;")
         print(f"    return 8;")
+        two_byte_instructions.append(f"0x{(const + (i<<3)):02X}")
         
 def misc_block0():
     #RLCA
@@ -184,19 +190,23 @@ def misc_block0():
     print(f"    return 4;")
     
     #DAA
+    #This one is very weird
     print(f"case(0x27):")
     print(f"    {flags['h']} = 0;")
     print(f"    uint8_t adj = 0;")
-    print(f"    if({flags['n']})")
+    print(f"    if({flags['n']})" + "{")
     print(f"        adj += ({flags['h']}) ? 0x6 : 0;")
     print(f"        adj += ({flags['c']}) ? 0x60: 0;")
     print(f"        {u8_regs_write[7]} -= adj;")
-    print(f"    else")
+    print("     }")
+    print(f"    else" + "{")
     print(f"        adj += ({flags['h']} || (({u8_regs_write[7]} & 0xF) > 0x9)) ? 0x6: 0;")
-    print(f"        if({flags['c']} || {u8_regs_read[7]} > 0x99)")
+    print(f"        if({flags['c']} || {u8_regs_read[7]} > 0x99)" + "{")
     print(f"            adj += 0x60;")
     print(f"            {flags['c']} = 1;")
+    print("         }")
     print(f"        {u8_regs_write[7]} += adj;")
+    print("     }")
     print(f"    {flags['z']} = ({u8_regs_read[7]} == 0);")
     print(f"    return 4;")
     
@@ -225,19 +235,21 @@ def JR():
     #JR
     print(f"case(0x18):")
     print(f"    registers.PC += ((int8_t) imm8);")  
+    two_byte_instructions.append(f"0x18")
     print(f"    return 12;")
     
     #JRC
     const = 0b00100000
     for i in range(0, 4):
         print(f"case(0x{(const + (i<<3)):02X}):")
-        print(f"    if({cond[i]})")
+        print(f"    if({cond[i]})" + "{")
         print(f"    registers.PC += ((int8_t) imm8);")
-        print(f"    return 12;")
+        print(f"    return 12;" + "\n}")
         print(f"    return 8;")
+        two_byte_instructions.append(f"0x{(const + (i<<3)):02X}")
     
     print(f"case(0x01):")
-    print(f'    printf("STOP HIT\ n");')
+    print(f'    printf("STOP HIT");')
     print(f"    return 0;")
 
 def ld_r8_r8():
@@ -247,5 +259,329 @@ def ld_r8_r8():
         print(f"    {u8_regs_write[(i & (0b111 << 3)) >> 3]} = {u8_regs_read[i & 0b111]};")
         print(f"    return 4;")
 
+def arithmetic():
+    const = 0b10000000
+    # ADD A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    {flags['n']} = 0;")
+        print(f"    {flags['h']} = tell_overflow({u8_regs_read[7]}, {u8_regs_read[i]}, 0, 3);")
+        print(f"    {flags['c']} = tell_overflow({u8_regs_read[7]}, {u8_regs_read[i]}, 0, 7);")
+        print(f"    {u8_regs_write[7]} += {u8_regs_read[i]};")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10001000
+    # ADC A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    uint8_t prev_carry = {flags['c']};")
+        print(f"    {flags['n']} = 0;")
+        print(f"    {flags['h']} = tell_overflow({u8_regs_read[7]}, {u8_regs_read[i]}, prev_carry, 3);")
+        print(f"    {flags['c']} = tell_overflow({u8_regs_read[7]}, {u8_regs_read[i]}, prev_carry, 7);")
+        print(f"    {u8_regs_write[7]} += {u8_regs_read[i]} + prev_carry;")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10010000
+    # SUB A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    {flags['n']} = 1;")
+        print(f"    {flags['h']} = tell_borrow({u8_regs_read[7]}, {u8_regs_read[i]}, 4);")
+        print(f"    {flags['c']} = ({u8_regs_read[7]} < {u8_regs_read[i]});")
+        print(f"    {u8_regs_write[7]} -= {u8_regs_read[i]};")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10011000
+    # SBC A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    uint8_t prev_carry = {flags['c']};")
+        print(f"    {flags['n']} = 1;")
+        print(f"    {flags['h']} = tell_borrow({u8_regs_read[7]}, {u8_regs_read[i]} +, prev_carry, 4);")
+        print(f"    {flags['c']} = ({u8_regs_read[7]} < ({u8_regs_read[i]} + prev_carry));")
+        print(f"    {u8_regs_write[7]} -= ({u8_regs_read[i]} + prev_carry);")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10100000
+    # AND A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    {flags['n']} = 0;")
+        print(f"    {flags['h']} = 1;")
+        print(f"    {flags['c']} = 0;")
+        print(f"    {u8_regs_write[7]} &= {u8_regs_read[i]};")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10101000
+    # XOR A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    {flags['n']} = 0;")
+        print(f"    {flags['h']} = 0;")
+        print(f"    {flags['c']} = 0;")
+        print(f"    {u8_regs_write[7]} ^= {u8_regs_read[i]};")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10110000
+    # OR A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    {flags['n']} = 0;")
+        print(f"    {flags['h']} = 0;")
+        print(f"    {flags['c']} = 0;")
+        print(f"    {u8_regs_write[7]} |= {u8_regs_read[i]};")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+        print(f"    return 4;")
+        
+    const = 0b10111000
+    # CP A r8
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<0)):02X}):")
+        print(f"    {flags['n']} = 1;")
+        print(f"    {flags['h']} = tell_borrow({u8_regs_read[7]}, {u8_regs_read[i]}, 4);")
+        print(f"    {flags['c']} = {u8_regs_read[7]} < {u8_regs_read[i]}")
+        print(f"    {flags['z']} = ({u8_regs_write[7]} == {u8_regs_read[i]});")
+        print(f"    return 4;")
+
+    print(f"case(0xC6):")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = tell_overflow({u8_regs_read[7]}, imm8, 0, 3);")
+    print(f"    {flags['c']} = tell_overflow({u8_regs_read[7]}, imm8, 0, 7);")
+    print(f"    {u8_regs_write[7]} += imm8;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xC6")
+    
+    print(f"case(0xCE):")
+    print(f"    uint8_t prev_carry = {flags['c']};")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = tell_overflow({u8_regs_read[7]}, imm8, prev_carry, 3);")
+    print(f"    {flags['c']} = tell_overflow({u8_regs_read[7]}, imm8, prev_carry, 7);")
+    print(f"    {u8_regs_write[7]} += imm8 + prev_carry;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xCE")
+     
+    print(f"case(0xD6):")
+    print(f"    {flags['n']} = 1;")
+    print(f"    {flags['h']} = tell_borrow({u8_regs_read[7]}, imm8, 4);")
+    print(f"    {flags['c']} = ({u8_regs_read[7]} < imm8);")
+    print(f"    {u8_regs_write[7]} -= imm8;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xD6")
+    
+    print(f"case(0xDE):")
+    print(f"    uint8_t prev_carry = {flags['c']};")
+    print(f"    {flags['n']} = 1;")
+    print(f"    {flags['h']} = tell_borrow({u8_regs_read[7]}, imm8 +, prev_carry, 4);")
+    print(f"    {flags['c']} = ({u8_regs_read[7]} < (imm8 + prev_carry));")
+    print(f"    {u8_regs_write[7]} -= (imm8 + prev_carry);")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xDE")
+    
+    print(f"case(0xE6):")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = 1;")
+    print(f"    {flags['c']} = 0;")
+    print(f"    {u8_regs_write[7]} &= imm8;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xE6")
+    
+    print(f"case(0xEE):")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = 0;")
+    print(f"    {flags['c']} = 0;")
+    print(f"    {u8_regs_write[7]} ^= imm8;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xEE")
+    
+    print(f"case(0xF6):")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = 0;")
+    print(f"    {flags['c']} = 0;")
+    print(f"    {u8_regs_write[7]} |= imm8;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == 0);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xF6")
+    
+    print(f"case(0xFE):")
+    print(f"    {flags['n']} = 1;")
+    print(f"    {flags['h']} = tell_borrow({u8_regs_read[7]}, imm8, 4);")
+    print(f"    {flags['c']} = {u8_regs_read[7]} < imm8;")
+    print(f"    {flags['z']} = ({u8_regs_write[7]} == imm8);")
+    print(f"    return 8;")
+    two_byte_instructions.append(f"0xFE")
+    
+def control_flow():
+    const = 0b11000000
+    
+    for i in range(0, 4):
+        print(f"case(0x{(const + (i<<3)):02X}):")
+        print(f"    if({cond[i]})" + "{")
+        print(f"        registers.PC = pop16();")
+        print(f"        return 20;" + "\n}")
+        print(f"    return 8;")
+
+    print(f"case(0xC9):")
+    print(f"    registers.PC = pop16();")
+    print(f"    return 16;")
+    
+    print(f"case(0xD9):")
+    print(f"    registers.PC = pop16();")
+    print(f"    IME = 1;")
+    print(f"    return 16;")
+    
+    const = 0b11000010
+    
+    for i in range(0, 4):
+        print(f"case(0x{(const + (i<<3)):02X}):")
+        print(f"    if({cond[i]})" + "{")
+        print(f"        registers.PC = imm16;")
+        print(f"        return 16;" + "\n}")
+        print(f"    return 12;")
+        three_byte_instructions.append(f"0x{(const + (i<<3)):02X}")
+        
+    print(f"case(0xC3):")
+    print(f"    registers.PC = imm16;")
+    three_byte_instructions.append(f"0xC3")
+    print(f"    return 12;")
+    
+    print(f"case(0xE9):")
+    print(f"    registers.PC = registers.HL_reg.HL;")
+    print(f"    return 4;")
+    
+    const = 0b11000100
+    
+    for i in range(0, 4):
+        print(f"case(0x{(const + (i<<3)):02X}):")
+        print(f"    if({cond[i]})" + "{")
+        print(f"        push16(registers.PC);")
+        print(f"        registers.PC = imm16;")
+        three_byte_instructions.append(f"0x{(const + (i<<3)):02X}")
+        print(f"        return 24;" + "\n}")
+        print(f"    return 12;")
+
+    print(f"case(0xCD):")
+    print(f"    push16(registers.PC);")
+    print(f"    registers.PC = imm16;")
+    print(f"    return 24;")
+    three_byte_instructions.append(f"0xCD")
+    
+    const = 0b11000111 
+    
+    for i in range(0, 8):
+        print(f"case(0x{(const + (i<<3)):02X}):")
+        print(f"    push16(registers.PC);")
+        print(f"    registers.PC = {i*8};")
+        print(f"    return 16;")
+
+    const = 0b11000001
+    
+    for i in range(0, 4):
+        print(f"case(0x{(const + (i<<4)):02X}):")
+        print(f"    {u16_stack_regs[i]} = pop16();")
+        print(f"    return 16;")
+        
+    const = 0b11000101
+    
+    for i in range(0, 4):
+        print(f"case(0x{(const + (i<<4)):02X}):")
+        print(f"    push16({u16_stack_regs[i]});")
+        print(f"    return 16;")
+        
+def other_block3():
+    print(f"case(0xE2):")
+    print(f"    write_memory({u8_regs_read[1]} + 0xFF00, {u8_regs_read[7]});")
+    print(f"    return 8;")
+    
+    print(f"case(0xE0):")
+    print(f"    write_memory(imm8 + 0xFF00, {u8_regs_read[7]});")
+    print(f"    return 12;")
+    
+    print(f"case(0xEA):")
+    print(f"    write_memory(imm16, {u8_regs_read[7]});")
+    print(f"    return 16;")
+    three_byte_instructions.append(f"0xEA")
+    
+    print(f"case(0xF2):")
+    print(f"    {u8_regs_read[7]} = read_memory({u8_regs_read[1]} + 0xFF00);")
+    print(f"    return 8;")
+    
+    print(f"case(0xF0):")
+    print(f"    {u8_regs_read[7]} = read_memory(imm8 + 0xFF00);")
+    print(f"    return 8;")
+    
+    print(f"case(0xFA):")
+    print(f"    {u8_regs_read[7]} = read_memory(imm16);")
+    print(f"    return 8;")
+    three_byte_instructions.append(f"0xFA")
+    
+    print(f"case(0xE8):")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = tell_overflow(registers.SP, imm8, 0, 3);")
+    print(f"    {flags['c']} = tell_overflow(registers.SP, imm8, 0, 7);")
+    print(f"    registers.SP += (int8_t) imm8;")
+    print(f"    {flags['z']} = 0;")
+    print(f"    return 16;")
+    two_byte_instructions.append(f"0xE8")
+    
+    print(f"case(0xF8):")
+    print(f"    {flags['n']} = 0;")
+    print(f"    {flags['h']} = tell_overflow(registers.SP, imm8, 0, 3);")
+    print(f"    {flags['c']} = tell_overflow(registers.SP, imm8, 0, 7);")
+    print(f"    registers.HL = (registers.SP + ((int8_t) imm8));")
+    print(f"    {flags['z']} = 0;")
+    print(f"    return 16;")
+    two_byte_instructions.append(f"0xF8")
+    
+    print(f"case(0xF9):")
+    print(f"    registers.SP = registers.HL;")
+    print(f"    return 8;")
   
-ld_r8_r8();
+    print(f"case(0xF3):")
+    print(f"    IME = 0;")
+    print(f"    return 4;")
+    
+    print(f"case(0xFB):")
+    print(f"    IME = 1;")
+    print(f"    return 4;")
+  
+# control_flow();
+
+def everything1():
+    ld_ops()
+    inc_r16()
+    dec_r16()
+    add_r16()
+    inc_r8()
+    dec_r8()
+    ld_r8()
+    
+def everything2():
+    misc_block0()
+    JR()
+    ld_r8_r8()
+    arithmetic()
+    control_flow()
+    other_block3()
+    
+def list_to_C_array(l):
+    print(f"[{len(l)}]" +" = {", end="")
+    for i in range(len(l)):
+        print(l[i], end=",")
+    print("};")
+    
+everything1()
+everything2()
+
+list_to_C_array(three_byte_instructions)

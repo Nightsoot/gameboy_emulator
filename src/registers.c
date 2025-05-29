@@ -2,6 +2,7 @@
 #include "../includes/memory_tools.h"
 
 struct Registers registers;
+uint8_t IME = 0;
 
 // int main(void){
 //     struct Registers registers;

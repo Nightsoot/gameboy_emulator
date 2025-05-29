@@ -48,3 +48,4 @@ struct Registers{
 };
 
 extern struct Registers registers;
+extern uint8_t IME;
