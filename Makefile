@@ -1,2 +1,2 @@
 opcodes: src/
-	cd src && gcc *.c -o opcodes
+	cd src && gcc *.c -o gameboy

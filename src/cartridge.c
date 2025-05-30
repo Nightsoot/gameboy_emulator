@@ -127,7 +127,8 @@ const char *cart_type_name(struct ROM_data *rom_data) {
 }
 
 
-uint8_t read_cartridge(char* filename, struct ROM_data *rom_data){
+uint8_t cartridge_load(char* filename, struct ROM_data *rom_data)
+{
 
     FILE * file_pointer = fopen(filename, "r");
 

@@ -1,0 +1,3146 @@
+def NOP_0x00(cpu, v):
+    return 4
+
+def LD_0x01(cpu, v):
+    cpu.registers["BC"] = v
+    return 12
+        
+def LD_0x02(cpu, v):
+    cpu.memory[cpu.registers["BC"]] = cpu.registers["A"]
+    return 8
+
+def INC_0x03(cpu, v):
+    cpu.registers["BC"] += 1
+    cpu.registers["BC"] &= 0xFFFF
+    return 8
+    
+def INC_0x04(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["B"] & 0xF) + 1) > 0xF
+    cpu.registers["B"] = (cpu.registers["B"] + 1) & 0xFF
+    if cpu.registers["B"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x05(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["B"] & 0xF) - 1) < 0
+    cpu.registers["B"] = (cpu.registers["B"] - 1) & 0xFF
+    if cpu.registers["B"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x06(cpu, v):
+    cpu.registers["B"] = v
+    return 8
+
+def RLCA_0x07(cpu, v):
+    cpu.registers["c"] = (cpu.registers["A"] & 0x80) >> 7
+    cpu.registers["A"] = ((cpu.registers["A"] << 1) + cpu.registers["c"]) & 0xFF
+    return 4
+
+def LD_0x08(cpu, v):
+    cpu.memory[v] = cpu.registers["SP"] & 0xFF
+    cpu.memory[v+1] = cpu.registers["SP"] >> 8
+    return 20
+
+def ADD_0x09(cpu, v):
+    cpu.registers["h"] = ((cpu.registers["BC"] & 0xFFF) + (cpu.registers["HL"] & 0xFFF)) > 0xFFF
+    cpu.registers["HL"] += cpu.registers["BC"]
+    if cpu.registers["HL"] > 0xFFFF:
+        cpu.registers["c"] = 1
+    else:
+        cpu.registers["c"] = 0
+    cpu.registers["HL"] &= 0xFFFF
+    cpu.registers["n"] = 0
+    return 8
+
+def LD_0x0A(cpu, v):
+    cpu.registers["A"] = cpu.memory[cpu.registers["BC"]]
+    return 8
+
+def DEC_0x0B(cpu, v):
+    cpu.registers["BC"] -= 1
+    cpu.registers["BC"] &= 0xFFFF
+    return 8
+
+def INC_0x0C(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["C"] & 0xF) + 1) > 0xF
+    cpu.registers["C"] = (cpu.registers["C"] + 1) & 0xFF
+    if cpu.registers["C"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x0D(cpu,v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["C"] & 0xF) - 1) < 0
+    cpu.registers["C"] = (cpu.registers["C"] - 1) & 0xFF
+    if cpu.registers["C"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x0E(cpu,v):
+    cpu.registers["C"] = v
+    return 8
+
+def RRCA_0x0F(cpu,v):
+    cpu.registers["c"] = cpu.registers["A"] & 0x01
+    cpu.registers["A"] = (cpu.registers["A"] >> 1) + (cpu.registers["c"] << 7)
+    return 4
+
+def STOP_0x10(cpu,v):
+    '''TODO'''
+    return 8
+
+def LD_0x11(cpu, v):
+    cpu.registers["DE"] = v
+    return 12
+
+def LD_0x12(cpu, v):
+    cpu.memory[cpu.registers["DE"]] = cpu.registers["A"]
+    return 8
+
+def INC_0x13(cpu, v):
+    cpu.registers["DE"] += 1
+    cpu.registers["DE"] &= 0xFFFF
+    return 8
+
+def INC_0x14(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["D"] & 0xF) + 1) > 0xF
+    cpu.registers["D"] = (cpu.registers["D"] + 1) & 0xFF
+    if cpu.registers["D"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x15(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["D"] & 0xF) - 1) < 0
+    cpu.registers["D"] = (cpu.registers["D"] - 1) & 0xFF
+    if cpu.registers["D"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x16(cpu, v):
+    cpu.registers["D"] = v
+    return 8
+
+def RLA_0x17(cpu,v):
+    t = (cpu.registers["A"] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def JR_0x18(cpu,v):
+    cpu.registers["PC"] += to_signed_8bit(v)
+    return 12
+
+def ADD_0x19(cpu, v):
+    cpu.registers["h"] = ((cpu.registers["DE"] & 0xFFF) + (cpu.registers["HL"] & 0xFFF)) > 0xFFF
+    cpu.registers["HL"] += cpu.registers["DE"]
+    if cpu.registers["HL"] > 0xFFFF:
+        cpu.registers["c"] = 1
+    else:
+        cpu.registers["c"] = 0
+    cpu.registers["HL"] &= 0xFFFF
+    cpu.registers["n"] = 0
+    return 8
+
+def LD_0x1A(cpu, v):
+    cpu.registers["A"] = cpu.memory[cpu.registers["DE"]]
+    return 8
+
+def DEC_0x1B(cpu, v):
+    cpu.registers["DE"] -= 1
+    cpu.registers["DE"] &= 0xFFFF
+    return 8
+
+def INC_0x1C(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["E"] & 0xF) + 1) > 0xF
+    cpu.registers["E"] = (cpu.registers["E"] + 1) & 0xFF
+    if cpu.registers["E"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x1D(cpu,v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["E"] & 0xF) - 1) < 0
+    cpu.registers["E"] = (cpu.registers["E"] - 1) & 0xFF
+    if cpu.registers["E"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x1E(cpu,v):
+    cpu.registers["E"] = v
+    return 8
+
+def RRA_0x1F(cpu,v):
+    t = (cpu.registers["c"] << 8) + cpu.registers["A"]
+    cpu.registers["c"] = t & 1
+    cpu.registers["A"] = t >> 1
+    return 4
+
+def JR_0x20(cpu,v):
+    if cpu.registers["z"] == 0:
+        cpu.registers["PC"] += to_signed_8bit(v)
+        return 12
+    else:
+        return 8
+    
+def LD_0x21(cpu, v):
+    cpu.registers["HL"] = v
+    return 12
+
+def LD_0x22(cpu, v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["A"]
+    cpu.registers["HL"] += 1
+    cpu.registers["HL"] &= 0xFFFF
+    return 8
+
+def INC_0x23(cpu, v):
+    cpu.registers["HL"] += 1
+    cpu.registers["HL"] &= 0xFFFF
+    return 8
+
+def INC_0x24(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["H"] & 0xF) + 1) > 0xF
+    cpu.registers["H"] = (cpu.registers["H"] + 1) & 0xFF
+    if cpu.registers["H"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x25(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["H"] & 0xF) - 1) < 0
+    cpu.registers["H"] = (cpu.registers["H"] - 1) & 0xFF
+    if cpu.registers["H"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x26(cpu, v):
+    cpu.registers["H"] = v
+    return 8
+
+def DDA_0x27(cpu, v):
+    '''DOUBLE-CHECK test this later'''
+    
+    t = cpu.registers["A"]
+    c = 0
+    if cpu.registers["h"] == 1:
+        c += 0x06
+    if cpu.registers["c"] == 1:
+        c += 0x60
+        
+    if cpu.registers["n"] == 1:
+        t -= c
+    else:
+        c |= 0x06 if (t & 0x0F) > 0x09 else 0x00
+        c |= 0x60 if t > 0x99 else 0x00
+        t += c
+        
+    cpu.registers["z"] = ((t & 0xFF) == 0)
+    cpu.registers["c"] = ((c & 0x60) != 0)
+    cpu.registers["h"] = 0
+    t &= 0xFF
+    cpu.registers["A"] = t
+    return 4
+
+def JR_0x28(cpu,v):
+    if cpu.registers["z"] == 1:
+        cpu.registers["PC"] += to_signed_8bit(v)
+        return 12
+    else:
+        return 8
+    
+def ADD_0x29(cpu, v):
+    cpu.registers["h"] = ((cpu.registers["HL"] & 0xFFF) + (cpu.registers["HL"] & 0xFFF)) > 0xFFF
+    cpu.registers["HL"] += cpu.registers["HL"]
+    if cpu.registers["HL"] > 0xFFFF:
+        cpu.registers["c"] = 1
+    else:
+        cpu.registers["c"] = 0
+    cpu.registers["HL"] &= 0xFFFF
+    cpu.registers["n"] = 0
+    return 8
+
+def LD_0x2A(cpu, v):
+    cpu.registers["A"] = cpu.memory[cpu.registers["HL"]]
+    cpu.registers["HL"] += 1
+    cpu.registers["HL"] &= 0xFFFF
+    return 8
+
+def DEC_0x2B(cpu, v):
+    cpu.registers["HL"] -= 1
+    cpu.registers["HL"] &= 0xFFFF
+    return 8
+
+def INC_0x2C(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["L"] & 0xF) + 1) > 0xF
+    cpu.registers["L"] = (cpu.registers["L"] + 1) & 0xFF
+    if cpu.registers["L"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x2D(cpu,v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["L"] & 0xF) - 1) < 0
+    cpu.registers["L"] = (cpu.registers["L"] - 1) & 0xFF
+    if cpu.registers["L"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x2E(cpu,v):
+    cpu.registers["L"] = v
+    return 8
+
+def CPL_0x2F(cpu,v):
+    cpu.registers["A"] = cpu.registers["A"] ^ 0xFF
+    cpu.registers["A"] &= 0xFF
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = 1
+    return 4
+
+def JR_0x30(cpu,v):
+    if cpu.registers["c"] == 0:
+        cpu.registers["PC"] += to_signed_8bit(v)
+        return 12
+    else:
+        return 8
+    
+def LD_0x31(cpu, v):
+    cpu.registers["SP"] = v
+    return 12
+
+def LD_0x32(cpu, v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["A"]
+    cpu.registers["HL"] -= 1
+    cpu.registers["HL"] &= 0xFFFF
+    return 8
+
+def INC_0x33(cpu, v):
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    return 8
+
+def INC_0x34(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.memory[cpu.registers["HL"]] & 0xF) + 1) > 0xF
+    cpu.memory[cpu.registers["HL"]] = (cpu.memory[cpu.registers["HL"]] + 1) & 0xFF
+    if cpu.memory[cpu.registers["HL"]] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x35(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.memory[cpu.registers["HL"]] & 0xF) - 1) < 0
+    cpu.memory[cpu.registers["HL"]] = (cpu.memory[cpu.registers["HL"]] - 1) & 0xFF
+    if cpu.memory[cpu.registers["HL"]] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x36(cpu, v):
+    cpu.memory[cpu.registers["HL"]] = v
+    return 8
+
+def SCF_0x37(cpu,v):
+    cpu.registers["c"] = 1
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    return 4
+
+def JR_0x38(cpu,v):
+    if cpu.registers["c"] == 1:
+        cpu.registers["PC"] += to_signed_8bit(v)
+        return 12
+    else:
+        return 8
+    
+def ADD_0x39(cpu, v):
+    cpu.registers["h"] = ((cpu.registers["SP"] & 0xFFF) + (cpu.registers["HL"] & 0xFFF)) > 0xFFF
+    cpu.registers["HL"] += cpu.registers["SP"]
+    if cpu.registers["HL"] > 0xFFFF:
+        cpu.registers["c"] = 1
+    else:
+        cpu.registers["c"] = 0
+    cpu.registers["HL"] &= 0xFFFF
+    cpu.registers["n"] = 0
+    return 8
+
+def LD_0x3A(cpu, v):
+    cpu.registers["A"] = cpu.memory[cpu.registers["HL"]]
+    cpu.registers["HL"] -= 1
+    cpu.registers["HL"] &= 0xFFFF
+    return 8
+
+def DEC_0x3B(cpu, v):
+    cpu.registers["SP"] -= 1
+    cpu.registers["SP"] &= 0xFFFF
+    return 8
+
+def INC_0x3C(cpu, v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + 1) > 0xF
+    cpu.registers["A"] = (cpu.registers["A"] + 1) & 0xFF
+    if cpu.registers["A"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def DEC_0x3D(cpu,v):
+    #check if the lower nibble had a carry into higher nibble
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - 1) < 0
+    cpu.registers["A"] = (cpu.registers["A"] - 1) & 0xFF
+    if cpu.registers["A"] == 0:
+        cpu.registers["z"] = 1
+    else:
+        cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    return 4
+
+def LD_0x3E(cpu,v):
+    cpu.registers["A"] = v
+    return 8
+
+def CCF_0x3F(cpu,v):
+    cpu.registers["c"] ^= 1
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    return 4
+
+def LD_0x40(cpu,v):
+    cpu.registers["B"] = cpu.registers["B"]
+    return 4
+
+def LD_0x41(cpu,v):
+    cpu.registers["B"] = cpu.registers["C"]
+    return 4
+
+def LD_0x42(cpu,v):
+    cpu.registers["B"] = cpu.registers["D"]
+    return 4
+
+def LD_0x43(cpu,v):
+    cpu.registers["B"] = cpu.registers["E"]
+    return 4
+
+def LD_0x44(cpu,v):
+    cpu.registers["B"] = cpu.registers["H"]
+    return 4
+
+def LD_0x45(cpu,v):
+    cpu.registers["B"] = cpu.registers["L"]
+    return 4
+
+def LD_0x46(cpu,v):
+    cpu.registers["B"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x47(cpu,v):
+    cpu.registers["B"] = cpu.registers["A"]
+    return 4
+
+def LD_0x48(cpu,v):
+    cpu.registers["C"] = cpu.registers["B"]
+    return 4
+
+def LD_0x49(cpu,v):
+    cpu.registers["C"] = cpu.registers["C"]
+    return 4
+
+def LD_0x4A(cpu,v):
+    cpu.registers["C"] = cpu.registers["D"]
+    return 4
+
+def LD_0x4B(cpu,v):
+    cpu.registers["C"] = cpu.registers["E"]
+    return 4
+
+def LD_0x4C(cpu,v):
+    cpu.registers["C"] = cpu.registers["H"]
+    return 4
+
+def LD_0x4D(cpu,v):
+    cpu.registers["C"] = cpu.registers["L"]
+    return 4
+
+def LD_0x4E(cpu,v):
+    cpu.registers["C"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x4F(cpu,v):
+    cpu.registers["C"] = cpu.registers["A"]
+    return 4
+
+def LD_0x50(cpu,v):
+    cpu.registers["D"] = cpu.registers["B"]
+    return 4
+
+def LD_0x51(cpu,v):
+    cpu.registers["D"] = cpu.registers["C"]
+    return 4
+
+def LD_0x52(cpu,v):
+    cpu.registers["D"] = cpu.registers["D"]
+    return 4
+
+def LD_0x53(cpu,v):
+    cpu.registers["D"] = cpu.registers["E"]
+    return 4
+
+def LD_0x54(cpu,v):
+    cpu.registers["D"] = cpu.registers["H"]
+    return 4
+
+def LD_0x55(cpu,v):
+    cpu.registers["D"] = cpu.registers["L"]
+    return 4
+
+def LD_0x56(cpu,v):
+    cpu.registers["D"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x57(cpu,v):
+    cpu.registers["D"] = cpu.registers["A"]
+    return 4
+
+def LD_0x58(cpu,v):
+    cpu.registers["E"] = cpu.registers["B"]
+    return 4
+
+def LD_0x59(cpu,v):
+    cpu.registers["E"] = cpu.registers["C"]
+    return 4
+
+def LD_0x5A(cpu,v):
+    cpu.registers["E"] = cpu.registers["D"]
+    return 4
+
+def LD_0x5B(cpu,v):
+    cpu.registers["E"] = cpu.registers["E"]
+    return 4
+
+def LD_0x5C(cpu,v):
+    cpu.registers["E"] = cpu.registers["H"]
+    return 4
+
+def LD_0x5D(cpu,v):
+    cpu.registers["E"] = cpu.registers["L"]
+    return 4
+
+def LD_0x5E(cpu,v):
+    cpu.registers["E"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x5F(cpu,v):
+    cpu.registers["E"] = cpu.registers["A"]
+    return 4
+
+def LD_0x60(cpu,v):
+    cpu.registers["H"] = cpu.registers["B"]
+    return 4
+
+def LD_0x61(cpu,v):
+    cpu.registers["H"] = cpu.registers["C"]
+    return 4
+
+def LD_0x62(cpu,v):
+    cpu.registers["H"] = cpu.registers["D"]
+    return 4
+
+def LD_0x63(cpu,v):
+    cpu.registers["H"] = cpu.registers["E"]
+    return 4
+
+def LD_0x64(cpu,v):
+    cpu.registers["H"] = cpu.registers["H"]
+    return 4
+
+def LD_0x65(cpu,v):
+    cpu.registers["H"] = cpu.registers["L"]
+    return 4
+
+def LD_0x66(cpu,v):
+    cpu.registers["H"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x67(cpu,v):
+    cpu.registers["H"] = cpu.registers["A"]
+    return 4
+
+def LD_0x68(cpu,v):
+    cpu.registers["L"] = cpu.registers["B"]
+    return 4
+
+def LD_0x69(cpu,v):
+    cpu.registers["L"] = cpu.registers["C"]
+    return 4
+
+def LD_0x6A(cpu,v):
+    cpu.registers["L"] = cpu.registers["D"]
+    return 4
+
+def LD_0x6B(cpu,v):
+    cpu.registers["L"] = cpu.registers["E"]
+    return 4
+
+def LD_0x6C(cpu,v):
+    cpu.registers["L"] = cpu.registers["H"]
+    return 4
+
+def LD_0x6D(cpu,v):
+    cpu.registers["L"] = cpu.registers["L"]
+    return 4
+
+def LD_0x6E(cpu,v):
+    cpu.registers["L"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x6F(cpu,v):
+    cpu.registers["L"] = cpu.registers["A"]
+    return 4
+
+def LD_0x70(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["B"]
+    return 4
+
+def LD_0x71(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["C"]
+    return 4
+
+def LD_0x72(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["D"]
+    return 4
+
+def LD_0x73(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["E"]
+    return 4
+
+def LD_0x74(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["H"]
+    return 4
+
+def LD_0x75(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["L"]
+    return 4
+
+def HALT_0x76(cpu,v):
+    """To DO"""
+    return 8
+
+def LD_0x77(cpu,v):
+    cpu.memory[cpu.registers["HL"]] = cpu.registers["A"]
+    return 4
+
+def LD_0x78(cpu,v):
+    cpu.registers["A"] = cpu.registers["B"]
+    return 4
+
+def LD_0x79(cpu,v):
+    cpu.registers["A"] = cpu.registers["C"]
+    return 4
+
+def LD_0x7A(cpu,v):
+    cpu.registers["A"] = cpu.registers["D"]
+    return 4
+
+def LD_0x7B(cpu,v):
+    cpu.registers["A"] = cpu.registers["E"]
+    return 4
+
+def LD_0x7C(cpu,v):
+    cpu.registers["A"] = cpu.registers["H"]
+    return 4
+
+def LD_0x7D(cpu,v):
+    cpu.registers["A"] = cpu.registers["L"]
+    return 4
+
+def LD_0x7E(cpu,v):
+    cpu.registers["A"] = cpu.memory[cpu.registers["HL"]]
+    return 8
+
+def LD_0x7F(cpu,v):
+    cpu.registers["A"] = cpu.registers["A"]
+    return 4
+
+def ADD_0x80(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["B"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["B"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADD_0x81(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["C"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["C"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADD_0x82(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["D"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["D"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADD_0x83(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["E"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["E"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADD_0x84(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["H"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["H"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADD_0x85(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["L"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["L"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADD_0x86(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.memory[cpu.registers["HL"]]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.memory[cpu.registers["HL"]] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 8
+
+def ADD_0x87(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["A"]
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["A"] & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x88(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["B"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["B"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x89(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["C"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["C"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x8A(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["D"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["D"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x8B(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["E"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["E"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x8C(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["H"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["H"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x8D(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["L"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["L"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def ADC_0x8E(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.memory[cpu.registers["HL"]] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.memory[cpu.registers["HL"]] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 8
+
+def ADC_0x8F(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + cpu.registers["A"] + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (cpu.registers["A"] & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def SUB_0x90(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["B"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["B"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["B"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SUB_0x91(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["C"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["C"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["C"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SUB_0x92(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["D"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["D"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["D"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SUB_0x93(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["E"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["E"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["E"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SUB_0x94(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["H"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["H"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["H"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SUB_0x95(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["L"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["L"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["L"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SUB_0x96(cpu, v):
+    t= cpu.registers["A"] - cpu.memory[cpu.registers["HL"]]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.memory[cpu.registers["HL"]] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.memory[cpu.registers["HL"]])
+    cpu.registers["A"] = t & 0xFF
+    return 8
+
+def SUB_0x97(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["A"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["A"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["A"])
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x98(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["B"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["B"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["B"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x99(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["C"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["C"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["C"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x9A(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["D"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["D"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["D"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x9B(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["E"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["E"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["E"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x9C(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["H"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["H"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["H"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x9D(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["L"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["L"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["L"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def SBC_0x9E(cpu, v):
+    t= cpu.registers["A"] - cpu.memory[cpu.registers["HL"]] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.memory[cpu.registers["HL"]] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.memory[cpu.registers["HL"]] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 8
+
+def SBC_0x9F(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["A"] - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["A"] & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (cpu.registers["A"] + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 4
+
+def AND_0xA0(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["B"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA1(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["C"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA2(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["D"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA3(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["E"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA4(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["H"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA5(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["L"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA6(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.memory[cpu.registers["HL"]]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def AND_0xA7(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & cpu.registers["A"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xA8(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["B"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xA9(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["C"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xAA(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["D"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xAB(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["E"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xAC(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["H"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xAD(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["L"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def XOR_0xAE(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.memory[cpu.registers["HL"]]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 8
+
+def XOR_0xAF(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ cpu.registers["A"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB0(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["B"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB1(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["C"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB2(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["D"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB3(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["E"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB4(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["H"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB5(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["L"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB6(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.memory[cpu.registers["HL"]]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def OR_0xB7(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | cpu.registers["A"]
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def CP_0xB8(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["B"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["B"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["B"])
+    return 4
+
+def CP_0xB9(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["C"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["C"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["C"])
+    return 4
+
+def CP_0xBA(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["D"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["D"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["D"])
+    return 4
+
+def CP_0xBB(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["E"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["E"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["E"])
+    return 4
+
+def CP_0xBC(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["H"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["H"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["H"])
+    return 4
+
+def CP_0xBD(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["L"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["L"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["L"])
+    return 4
+
+def CP_0xBE(cpu, v):
+    t= cpu.registers["A"] - cpu.memory[cpu.registers["HL"]]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.memory[cpu.registers["HL"]] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.memory[cpu.registers["HL"]])
+    return 4
+
+def CP_0xBF(cpu, v):
+    t= cpu.registers["A"] - cpu.registers["A"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (cpu.registers["A"] & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < cpu.registers["A"])
+    return 4
+
+def RET_0xC0(cpu, v):
+    if cpu.registers["z"] == 0:
+        first_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        second_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        cpu.registers["SP"] &= 0xFFFF
+        cpu.registers["PC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+        return 20
+    else:
+        return 8
+    
+def POP_0xC1(cpu, v):
+    first_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    second_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    cpu.registers["BC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+    return 12
+
+def JP_0xC2(cpu,v):
+    if cpu.registers["z"] == 0:
+        cpu.registers["PC"] = v
+        return 16
+    else:
+        return 12
+    
+def JP_0xC3(cpu,v):
+    cpu.registers["PC"] = v
+    return 16
+
+def CALL_0xC4(cpu, v):
+    if cpu.registers["z"] == 0:
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+        cpu.registers["PC"] = v
+        return 24
+    else:
+        return 12
+        
+def PUSH_0xC5(cpu, v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["BC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["BC"] & 0xFF
+    return 16
+
+def ADD_0xC6(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + v
+    cpu.registers["c"] = t >> 8
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (v & 0xF)) > 0xF
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 8
+
+def RST_0xC7(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0000
+    return 16
+    
+def RET_0xC8(cpu, v):
+    if cpu.registers["z"] == 1:
+        first_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        second_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        cpu.registers["SP"] &= 0xFFFF
+        cpu.registers["PC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+        return 16
+    else:
+        return 12
+    
+def RET_0xC9(cpu, v):
+    first_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    second_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    cpu.registers["PC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+    return 12
+
+def JP_0xCA(cpu,v):
+    if cpu.registers["z"] == 1:
+        cpu.registers["PC"] = v
+        return 16
+    else:
+        return 12    
+
+def CALL_0xCC(cpu, v):
+    if cpu.registers["z"] == 1:
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+        cpu.registers["PC"] = v
+        return 24
+    else:
+        return 12
+    
+def CALL_0xCD(cpu, v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = v
+    return 24
+
+def ADC_0xCE(cpu, v):
+    cpu.registers["n"] = 0
+    t = cpu.registers["A"] + v + cpu.registers["c"]
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (v & 0xF) + cpu.registers["c"]) > 0xF
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers["A"] = t
+    cpu.registers["z"] = (t == 0)
+    return 4
+
+def RST_0xCF(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0008
+    return 16
+    
+def RET_0xD0(cpu, v):
+    if cpu.registers["c"] == 0:
+        first_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        second_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        cpu.registers["SP"] &= 0xFFFF
+        cpu.registers["PC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+        return 20
+    else:
+        return 8
+    
+def POP_0xD1(cpu, v):
+    first_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    second_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    cpu.registers["DE"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+    return 12
+
+def JP_0xD2(cpu,v):
+    if cpu.registers["c"] == 0:
+        cpu.registers["PC"] = v
+        return 16
+    else:
+        return 12
+    
+def CALL_0xD4(cpu, v):
+    if cpu.registers["c"] == 0:
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+        cpu.registers["PC"] = v
+        return 24
+    else:
+        return 12
+    
+def PUSH_0xD5(cpu, v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["DE"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["DE"] & 0xFF
+    return 16
+
+def SUB_0xD6(cpu, v):
+    t= cpu.registers["A"] - v
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (v & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < v)
+    cpu.registers["A"] = t & 0xFF
+    return 8
+
+def RST_0xD7(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0010
+    return 16
+
+
+def RET_0xD8(cpu, v):
+    if cpu.registers["c"] == 1:
+        first_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        second_stack_byte = cpu.memory[cpu.registers["SP"]]
+        cpu.registers["SP"] += 1
+        cpu.registers["SP"] &= 0xFFFF
+        cpu.registers["PC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+        return 20
+    else:
+        return 8
+    
+def RETI_0xD9(cpu, v):
+    first_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    second_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    cpu.registers["PC"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+    cpu.memory["IE"] = 1
+    return 12
+
+def JP_0xDA(cpu,v):
+    if cpu.registers["c"] == 1:
+        cpu.registers["PC"] = v
+        return 16
+    else:
+        return 12    
+    
+def CALL_0xDC(cpu, v):
+    if cpu.registers["c"] == 1:
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+        cpu.registers["SP"] -= 1
+        cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+        cpu.registers["PC"] = v
+        return 24
+    else:
+        return 12
+    
+def SBC_0xDE(cpu, v):
+    t= cpu.registers["A"] - v - cpu.registers["c"]
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (v & 0xF) - cpu.registers["c"]) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < (v + cpu.registers["c"]))
+    cpu.registers["A"] = t & 0xFF
+    return 8
+
+def RST_0xDF(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0018
+    return 16
+
+def LDH_0xE0(cpu,v):
+    cpu.memory[0xFF00 + v] = cpu.registers["A"]
+    return 12
+
+def POP_0xE1(cpu, v):
+    first_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    second_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    cpu.registers["HL"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+    return 12
+
+def LD_0xE2(cpu,v):
+    cpu.memory[0xFF00 + cpu.registers["C"]] = cpu.registers["A"]
+    return 8
+
+def PUSH_0xE5(cpu, v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["HL"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["HL"] & 0xFF
+    return 16
+
+def AND_0xE6(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] & v
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 1
+    cpu.registers["c"] = 0
+    return 4
+
+def RST_0xE7(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0020
+    return 16
+
+def ADD_0xE8(cpu, v):
+    '''If there is an issue it is likely here'''
+    cpu.registers["n"] = 0
+    cpu.registers["z"] = 0
+    t = cpu.registers["SP"] + to_signed_8bit(v)
+    cpu.registers["c"] = ((cpu.registers["A"] & 0xFF) + (v & 0xFF)) > 0xFF
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (v & 0xF)) > 0xF
+    t &= 0xFFFF
+    cpu.registers["SP"] = t
+    return 16
+
+def JP_0xE9(cpu,v):
+    cpu.registers["PC"] = cpu.registers["HL"]
+    return 4
+
+def LD_0xEA(cpu,v):
+    cpu.memory[v] = cpu.registers["A"]
+    return 16
+
+def XOR_0xEE(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] ^ v
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 8
+
+def RST_0xEF(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0028
+    return 16
+
+def LDH_0xF0(cpu,v):
+    cpu.registers["A"] = cpu.memory[0xFF00 + v]
+    return 12
+
+def POP_0xF1(cpu, v):
+    first_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    second_stack_byte = cpu.memory[cpu.registers["SP"]]
+    cpu.registers["SP"] += 1
+    cpu.registers["SP"] &= 0xFFFF
+    cpu.registers["AF"] = ((second_stack_byte << 8) + first_stack_byte) & 0xFFFF
+    return 12
+
+def LD_0xF2(cpu,v):
+    cpu.registers["A"] = cpu.memory[0xFF00 + cpu.registers["C"]]
+    return 8
+
+def DI_0xF3(cpu,v):
+    cpu.memory["IE"] = 0
+    return 4
+
+def PUSH_0xF5(cpu, v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["AF"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["AF"] & 0xFF
+    return 16
+
+def OR_0xF6(cpu, v):
+    cpu.registers["A"] = cpu.registers["A"] | v
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["n"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["c"] = 0
+    return 4
+
+def RST_0xF7(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0030
+    return 16
+
+def LD_0xF8(cpu,v):
+    cpu.registers["HL"] = cpu.registers["SP"] + to_signed_8bit(v)
+    cpu.registers["c"] = ((cpu.registers["A"] & 0xFF) + (v & 0xFF)) > 0xFF
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) + (v & 0xF)) > 0xF
+    cpu.registers["z"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers["HL"] &= 0xFFFF
+    return 12
+
+def LD_0xF9(cpu,v):
+    cpu.registers["SP"] = cpu.registers["HL"]
+    return 8
+
+def LD_0xFA(cpu,v):
+    cpu.registers["A"] = cpu.memory[v]
+    return 16
+
+def EI_0xFB(cpu, v):
+    #second value returned is the scheduled IE value
+    return 4, 1
+
+def CP_0xFE(cpu, v):
+    t= cpu.registers["A"] - v
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["n"] = 1
+    cpu.registers["h"] = ((cpu.registers["A"] & 0xF) - (v & 0xF)) < 0
+    cpu.registers["c"] = (cpu.registers["A"] < v)
+    return 8
+
+def RST_0xFF(cpu,v):
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = (cpu.registers["PC"] & 0xFF00) >> 8
+    cpu.registers["SP"] -= 1
+    cpu.memory[cpu.registers["SP"]] = cpu.registers["PC"] & 0xFF
+    cpu.registers["PC"] = 0x0038
+    return 16
+
+def RLC_0x00(cpu, v):
+    cpu.registers["c"] = (cpu.registers["B"] & 0x80) >> 7
+    cpu.registers["B"] = ((cpu.registers["B"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["B"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RLC_0x01(cpu, v):
+    cpu.registers["c"] = (cpu.registers["C"] & 0x80) >> 7
+    cpu.registers["C"] = ((cpu.registers["C"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["C"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RLC_0x02(cpu, v):
+    cpu.registers["c"] = (cpu.registers["D"] & 0x80) >> 7
+    cpu.registers["D"] = ((cpu.registers["D"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["D"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RLC_0x03(cpu, v):
+    cpu.registers["c"] = (cpu.registers["E"] & 0x80) >> 7
+    cpu.registers["E"] = ((cpu.registers["E"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["E"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RLC_0x04(cpu, v):
+    cpu.registers["c"] = (cpu.registers["H"] & 0x80) >> 7
+    cpu.registers["H"] = ((cpu.registers["H"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["H"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RLC_0x05(cpu, v):
+    cpu.registers["c"] = (cpu.registers["L"] & 0x80) >> 7
+    cpu.registers["L"] = ((cpu.registers["L"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["L"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RLC_0x06(cpu, v):
+    cpu.registers["c"] = (cpu.memory[cpu.registers["HL"]] & 0x80) >> 7
+    cpu.memory[cpu.registers["HL"]] = ((cpu.memory[cpu.registers["HL"]] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.memory[cpu.registers["HL"]] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 16
+
+def RLC_0x07(cpu, v):
+    cpu.registers["c"] = (cpu.registers["A"] & 0x80) >> 7
+    cpu.registers["A"] = ((cpu.registers["A"] << 1) + cpu.registers["c"]) & 0xFF
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x08(cpu,v):
+    cpu.registers["c"] = cpu.registers["B"] & 0x01
+    cpu.registers["B"] = (cpu.registers["B"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["B"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x09(cpu,v):
+    cpu.registers["c"] = cpu.registers["C"] & 0x01
+    cpu.registers["C"] = (cpu.registers["C"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["C"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x0A(cpu,v):
+    cpu.registers["c"] = cpu.registers["D"] & 0x01
+    cpu.registers["D"] = (cpu.registers["D"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["D"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x0B(cpu,v):
+    cpu.registers["c"] = cpu.registers["E"] & 0x01
+    cpu.registers["E"] = (cpu.registers["E"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["E"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x0C(cpu,v):
+    cpu.registers["c"] = cpu.registers["H"] & 0x01
+    cpu.registers["H"] = (cpu.registers["H"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["H"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x0D(cpu,v):
+    cpu.registers["c"] = cpu.registers["L"] & 0x01
+    cpu.registers["L"] = (cpu.registers["L"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["L"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RRC_0x0E(cpu,v):
+    cpu.registers["c"] = cpu.memory[cpu.registers["HL"]] & 0x01
+    cpu.memory[cpu.registers["HL"]] = (cpu.memory[cpu.registers["HL"]] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.memory[cpu.registers["HL"]] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 16
+
+def RRC_0x0F(cpu,v):
+    cpu.registers["c"] = cpu.registers["A"] & 0x01
+    cpu.registers["A"] = (cpu.registers["A"] >> 1) + (cpu.registers["c"] << 7)
+    cpu.registers["z"] = (cpu.registers["A"] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x10(cpu,v):
+    t = (cpu.registers['B'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['B'] >> 8
+    cpu.registers['B'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['B'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x11(cpu,v):
+    t = (cpu.registers['C'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['C'] >> 8
+    cpu.registers['C'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['C'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x12(cpu,v):
+    t = (cpu.registers['D'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['D'] >> 8
+    cpu.registers['D'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['D'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x13(cpu,v):
+    t = (cpu.registers['E'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['E'] >> 8
+    cpu.registers['E'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['E'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x14(cpu,v):
+    t = (cpu.registers['H'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['H'] >> 8
+    cpu.registers['H'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['H'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x15(cpu,v):
+    t = (cpu.registers['L'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['L'] >> 8
+    cpu.registers['L'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['L'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x16(cpu,v):
+    t = (cpu.memory[cpu.registers['HL']] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.memory[cpu.registers['HL']] >> 8
+    cpu.memory[cpu.registers['HL']] = t & 0xFF
+    cpu.registers["z"] = (cpu.memory[cpu.registers['HL']] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RL_0x17(cpu,v):
+    t = (cpu.registers['A'] << 1) + cpu.registers["c"]
+    cpu.registers["c"] = cpu.registers['A'] >> 8
+    cpu.registers['A'] = t & 0xFF
+    cpu.registers["z"] = (cpu.registers['A'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x18(cpu,v):
+    t = (cpu.registers['B']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['B'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['B'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x19(cpu,v):
+    t = (cpu.registers['C']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['C'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['C'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x1A(cpu,v):
+    t = (cpu.registers['D']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['D'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['D'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x1B(cpu,v):
+    t = (cpu.registers['E']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['E'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['E'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x1C(cpu,v):
+    t = (cpu.registers['H']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['H'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['H'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x1D(cpu,v):
+    t = (cpu.registers['L']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['L'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['L'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x1E(cpu,v):
+    t = (cpu.memory[cpu.registers['HL']]) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.memory[cpu.registers['HL']] = t >> 1
+    cpu.registers["z"] = (cpu.memory[cpu.registers['HL']] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def RR_0x1F(cpu,v):
+    t = (cpu.registers['A']) + (cpu.registers["c"] << 8)
+    cpu.registers["c"] = t & 1
+    cpu.registers['A'] = t >> 1
+    cpu.registers["z"] = (cpu.registers['A'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x20(cpu,v):
+    t = cpu.registers['B'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['B'] = t
+    cpu.registers["z"] = (cpu.registers['B'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x21(cpu,v):
+    t = cpu.registers['C'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['C'] = t
+    cpu.registers["z"] = (cpu.registers['C'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x22(cpu,v):
+    t = cpu.registers['D'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['D'] = t
+    cpu.registers["z"] = (cpu.registers['D'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x23(cpu,v):
+    t = cpu.registers['E'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['E'] = t
+    cpu.registers["z"] = (cpu.registers['E'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x24(cpu,v):
+    t = cpu.registers['H'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['H'] = t
+    cpu.registers["z"] = (cpu.registers['H'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x25(cpu,v):
+    t = cpu.registers['L'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['L'] = t
+    cpu.registers["z"] = (cpu.registers['L'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x26(cpu,v):
+    t = cpu.memory[cpu.registers['HL']] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.memory[cpu.registers['HL']] = t
+    cpu.registers["z"] = (cpu.memory[cpu.registers['HL']] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SLA_0x27(cpu,v):
+    t = cpu.registers['A'] << 1
+    cpu.registers["c"] = t >> 8
+    t &= 0xFF
+    cpu.registers['A'] = t
+    cpu.registers["z"] = (cpu.registers['A'] == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x28(cpu,v):
+    cpu.registers["c"] = cpu.registers['B'] & 1
+    t = (cpu.registers['B'] >> 1) + (cpu.registers['B'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['B'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x29(cpu,v):
+    cpu.registers["c"] = cpu.registers['C'] & 1
+    t = (cpu.registers['C'] >> 1) + (cpu.registers['C'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['C'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x2A(cpu,v):
+    cpu.registers["c"] = cpu.registers['D'] & 1
+    t = (cpu.registers['D'] >> 1) + (cpu.registers['D'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['D'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x2B(cpu,v):
+    cpu.registers["c"] = cpu.registers['E'] & 1
+    t = (cpu.registers['E'] >> 1) + (cpu.registers['E'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['E'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x2C(cpu,v):
+    cpu.registers["c"] = cpu.registers['H'] & 1
+    t = (cpu.registers['H'] >> 1) + (cpu.registers['H'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['H'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x2D(cpu,v):
+    cpu.registers["c"] = cpu.registers['L'] & 1
+    t = (cpu.registers['L'] >> 1) + (cpu.registers['L'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['L'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x2E(cpu,v):
+    cpu.registers["c"] = cpu.memory[cpu.registers['HL']] & 1
+    t = (cpu.memory[cpu.registers['HL']] >> 1) + (cpu.memory[cpu.registers['HL']] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.memory[cpu.registers['HL']] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SRA_0x2F(cpu,v):
+    cpu.registers["c"] = cpu.registers['A'] & 1
+    t = (cpu.registers['A'] >> 1) + (cpu.registers['A'] & 0x80)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers['A'] = t
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    return 8
+
+def SWAP_0x30(cpu,v):
+    t = (cpu.registers['B'] >> 4) + ((cpu.registers['B'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['B'] = t
+    return 8
+
+def SWAP_0x31(cpu,v):
+    t = (cpu.registers['C'] >> 4) + ((cpu.registers['C'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['C'] = t
+    return 8
+
+def SWAP_0x32(cpu,v):
+    t = (cpu.registers['D'] >> 4) + ((cpu.registers['D'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['D'] = t
+    return 8
+
+def SWAP_0x33(cpu,v):
+    t = (cpu.registers['E'] >> 4) + ((cpu.registers['E'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['E'] = t
+    return 8
+
+def SWAP_0x34(cpu,v):
+    t = (cpu.registers['H'] >> 4) + ((cpu.registers['H'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['H'] = t
+    return 8
+
+def SWAP_0x35(cpu,v):
+    t = (cpu.registers['L'] >> 4) + ((cpu.registers['L'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['L'] = t
+    return 8
+
+def SWAP_0x36(cpu,v):
+    t = (cpu.memory[cpu.registers['HL']] >> 4) + ((cpu.memory[cpu.registers['HL']] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.memory[cpu.registers['HL']] = t
+    return 8
+
+def SWAP_0x37(cpu,v):
+    t = (cpu.registers['A'] >> 4) + ((cpu.registers['A'] & 0xF) << 4)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["c"] = 0
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['A'] = t
+    return 8
+
+def SRL_0x38(cpu,v):
+    cpu.registers["c"] = cpu.registers['B'] & 1
+    t = (cpu.registers['B'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['B'] = t
+    return 8
+
+def SRL_0x39(cpu,v):
+    cpu.registers["c"] = cpu.registers['C'] & 1
+    t = (cpu.registers['C'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['C'] = t
+    return 8
+
+def SRL_0x3A(cpu,v):
+    cpu.registers["c"] = cpu.registers['D'] & 1
+    t = (cpu.registers['D'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['D'] = t
+    return 8
+
+def SRL_0x3B(cpu,v):
+    cpu.registers["c"] = cpu.registers['E'] & 1
+    t = (cpu.registers['E'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['E'] = t
+    return 8
+
+def SRL_0x3C(cpu,v):
+    cpu.registers["c"] = cpu.registers['H'] & 1
+    t = (cpu.registers['H'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['H'] = t
+    return 8
+
+def SRL_0x3D(cpu,v):
+    cpu.registers["c"] = cpu.registers['L'] & 1
+    t = (cpu.registers['L'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['L'] = t
+    return 8
+
+def SRL_0x3E(cpu,v):
+    cpu.registers["c"] = cpu.memory[cpu.registers['HL']] & 1
+    t = (cpu.memory[cpu.registers['HL']] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.memory[cpu.registers['HL']] = t
+    return 8
+
+def SRL_0x3F(cpu,v):
+    cpu.registers["c"] = cpu.registers['A'] & 1
+    t = (cpu.registers['A'] >> 1)
+    cpu.registers["z"] = (t == 0)
+    cpu.registers["h"] = 0
+    cpu.registers["n"] = 0
+    cpu.registers['A'] = t
+    return 8
+
+def BIT_0x40(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x41(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x42(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x43(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x44(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x45(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x46(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x47(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 0)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x48(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x49(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x4A(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x4B(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x4C(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x4D(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x4E(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x4F(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 1)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x50(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x51(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x52(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x53(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x54(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x55(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x56(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x57(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 2)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x58(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x59(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x5A(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x5B(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x5C(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x5D(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x5E(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x5F(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 3)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x60(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x61(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x62(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x63(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x64(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x65(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x66(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x67(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 4)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x68(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x69(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x6A(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x6B(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x6C(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x6D(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x6E(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x6F(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 5)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x70(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x71(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x72(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x73(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x74(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x75(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x76(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x77(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 6)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x78(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['B'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x79(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['C'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x7A(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['D'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x7B(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['E'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x7C(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['H'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x7D(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['L'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x7E(cpu,v):
+    cpu.registers["z"] = ((cpu.memory[cpu.registers['HL']] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def BIT_0x7F(cpu,v):
+    cpu.registers["z"] = ((cpu.registers['A'] & (1 << 7)) == 0)
+    cpu.registers["h"] = 1
+    cpu.registers["n"] = 0
+    return 8
+
+def RES_0x80(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x81(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x82(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x83(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x84(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x85(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x86(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x87(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 0))
+    return 8
+
+def RES_0x88(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x89(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x8A(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x8B(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x8C(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x8D(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x8E(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x8F(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 1))
+    return 8
+
+def RES_0x90(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x91(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x92(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x93(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x94(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x95(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x96(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x97(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 2))
+    return 8
+
+def RES_0x98(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x99(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x9A(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x9B(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x9C(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x9D(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x9E(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0x9F(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 3))
+    return 8
+
+def RES_0xA0(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA1(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA2(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA3(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA4(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA5(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA6(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA7(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 4))
+    return 8
+
+def RES_0xA8(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xA9(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xAA(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xAB(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xAC(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xAD(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xAE(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xAF(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 5))
+    return 8
+
+def RES_0xB0(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB1(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB2(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB3(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB4(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB5(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB6(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB7(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 6))
+    return 8
+
+def RES_0xB8(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xB9(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xBA(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xBB(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xBC(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xBD(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xBE(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] & (0xFF ^ (1 << 7))
+    return 8
+
+def RES_0xBF(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] & (0xFF ^ (1 << 7))
+    return 8
+
+def SET_0xC0(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 0)
+    return 8
+
+def SET_0xC1(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 0)
+    return 8
+
+def SET_0xC2(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 0)
+    return 8
+
+def SET_0xC3(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 0)
+    return 8
+
+def SET_0xC4(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 0)
+    return 8
+
+def SET_0xC5(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 0)
+    return 8
+
+def SET_0xC6(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 0)
+    return 8
+
+def SET_0xC7(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 0)
+    return 8
+
+def SET_0xC8(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 1)
+    return 8
+
+def SET_0xC9(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 1)
+    return 8
+
+def SET_0xCA(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 1)
+    return 8
+
+def SET_0xCB(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 1)
+    return 8
+
+def SET_0xCC(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 1)
+    return 8
+
+def SET_0xCD(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 1)
+    return 8
+
+def SET_0xCE(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 1)
+    return 8
+
+def SET_0xCF(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 1)
+    return 8
+
+def SET_0xD0(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 2)
+    return 8
+
+def SET_0xD1(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 2)
+    return 8
+
+def SET_0xD2(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 2)
+    return 8
+
+def SET_0xD3(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 2)
+    return 8
+
+def SET_0xD4(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 2)
+    return 8
+
+def SET_0xD5(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 2)
+    return 8
+
+def SET_0xD6(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 2)
+    return 8
+
+def SET_0xD7(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 2)
+    return 8
+
+def SET_0xD8(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 3)
+    return 8
+
+def SET_0xD9(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 3)
+    return 8
+
+def SET_0xDA(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 3)
+    return 8
+
+def SET_0xDB(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 3)
+    return 8
+
+def SET_0xDC(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 3)
+    return 8
+
+def SET_0xDD(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 3)
+    return 8
+
+def SET_0xDE(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 3)
+    return 8
+
+def SET_0xDF(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 3)
+    return 8
+
+def SET_0xE0(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 4)
+    return 8
+
+def SET_0xE1(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 4)
+    return 8
+
+def SET_0xE2(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 4)
+    return 8
+
+def SET_0xE3(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 4)
+    return 8
+
+def SET_0xE4(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 4)
+    return 8
+
+def SET_0xE5(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 4)
+    return 8
+
+def SET_0xE6(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 4)
+    return 8
+
+def SET_0xE7(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 4)
+    return 8
+
+def SET_0xE8(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 5)
+    return 8
+
+def SET_0xE9(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 5)
+    return 8
+
+def SET_0xEA(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 5)
+    return 8
+
+def SET_0xEB(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 5)
+    return 8
+
+def SET_0xEC(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 5)
+    return 8
+
+def SET_0xED(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 5)
+    return 8
+
+def SET_0xEE(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 5)
+    return 8
+
+def SET_0xEF(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 5)
+    return 8
+
+def SET_0xF0(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 6)
+    return 8
+
+def SET_0xF1(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 6)
+    return 8
+
+def SET_0xF2(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 6)
+    return 8
+
+def SET_0xF3(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 6)
+    return 8
+
+def SET_0xF4(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 6)
+    return 8
+
+def SET_0xF5(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 6)
+    return 8
+
+def SET_0xF6(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 6)
+    return 8
+
+def SET_0xF7(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 6)
+    return 8
+
+def SET_0xF8(cpu,v):
+    cpu.registers['B'] = cpu.registers['B'] | (1 << 7)
+    return 8
+
+def SET_0xF9(cpu,v):
+    cpu.registers['C'] = cpu.registers['C'] | (1 << 7)
+    return 8
+
+def SET_0xFA(cpu,v):
+    cpu.registers['D'] = cpu.registers['D'] | (1 << 7)
+    return 8
+
+def SET_0xFB(cpu,v):
+    cpu.registers['E'] = cpu.registers['E'] | (1 << 7)
+    return 8
+
+def SET_0xFC(cpu,v):
+    cpu.registers['H'] = cpu.registers['H'] | (1 << 7)
+    return 8
+
+def SET_0xFD(cpu,v):
+    cpu.registers['L'] = cpu.registers['L'] | (1 << 7)
+    return 8
+
+def SET_0xFE(cpu,v):
+    cpu.memory[cpu.registers['HL']] = cpu.memory[cpu.registers['HL']] | (1 << 7)
+    return 8
+
+def SET_0xFF(cpu,v):
+    cpu.registers['A'] = cpu.registers['A'] | (1 << 7)
+    return 8

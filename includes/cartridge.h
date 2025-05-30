@@ -1,3 +1,6 @@
+#ifndef CARTRIDGE_H
+#define CARTRIDGE_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -28,3 +31,5 @@ uint8_t cartridge_load(char* filename, struct ROM_data *rom_data);
 
 uint8_t read_ROM(uint16_t address, struct ROM_data *rom_data);
 void write_ROM(uint16_t address, struct ROM_data *rom_data);
+
+#endif

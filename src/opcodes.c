@@ -46,6 +46,294 @@ uint8_t three_byte_instructions[17] = {
     0xFA,
 };
 
+char *opcode_names[256] = {
+    "NOP_0x00",
+    "LD_0x01",
+    "LD_0x02",
+    "INC_0x03",
+    "INC_0x04",
+    "DEC_0x05",
+    "LD_0x06",
+    "RLCA_0x07",
+    "LD_0x08",
+    "ADD_0x09",
+    "LD_0x0A",
+    "DEC_0x0B",
+    "INC_0x0C",
+    "DEC_0x0D",
+    "LD_0x0E",
+    "RRCA_0x0F",
+    "STOP_0x10",
+    "LD_0x11",
+    "LD_0x12",
+    "INC_0x13",
+    "INC_0x14",
+    "DEC_0x15",
+    "LD_0x16",
+    "RLA_0x17",
+    "JR_0x18",
+    "ADD_0x19",
+    "LD_0x1A",
+    "DEC_0x1B",
+    "INC_0x1C",
+    "DEC_0x1D",
+    "LD_0x1E",
+    "RRA_0x1F",
+    "JR_0x20",
+    "LD_0x21",
+    "LD_0x22",
+    "INC_0x23",
+    "INC_0x24",
+    "DEC_0x25",
+    "LD_0x26",
+    "DDA_0x27",
+    "JR_0x28",
+    "ADD_0x29",
+    "LD_0x2A",
+    "DEC_0x2B",
+    "INC_0x2C",
+    "DEC_0x2D",
+    "LD_0x2E",
+    "CPL_0x2F",
+    "JR_0x30",
+    "LD_0x31",
+    "LD_0x32",
+    "INC_0x33",
+    "INC_0x34",
+    "DEC_0x35",
+    "LD_0x36",
+    "SCF_0x37",
+    "JR_0x38",
+    "ADD_0x39",
+    "LD_0x3A",
+    "DEC_0x3B",
+    "INC_0x3C",
+    "DEC_0x3D",
+    "LD_0x3E",
+    "CCF_0x3F",
+    "LD_0x40",
+    "LD_0x41",
+    "LD_0x42",
+    "LD_0x43",
+    "LD_0x44",
+    "LD_0x45",
+    "LD_0x46",
+    "LD_0x47",
+    "LD_0x48",
+    "LD_0x49",
+    "LD_0x4A",
+    "LD_0x4B",
+    "LD_0x4C",
+    "LD_0x4D",
+    "LD_0x4E",
+    "LD_0x4F",
+    "LD_0x50",
+    "LD_0x51",
+    "LD_0x52",
+    "LD_0x53",
+    "LD_0x54",
+    "LD_0x55",
+    "LD_0x56",
+    "LD_0x57",
+    "LD_0x58",
+    "LD_0x59",
+    "LD_0x5A",
+    "LD_0x5B",
+    "LD_0x5C",
+    "LD_0x5D",
+    "LD_0x5E",
+    "LD_0x5F",
+    "LD_0x60",
+    "LD_0x61",
+    "LD_0x62",
+    "LD_0x63",
+    "LD_0x64",
+    "LD_0x65",
+    "LD_0x66",
+    "LD_0x67",
+    "LD_0x68",
+    "LD_0x69",
+    "LD_0x6A",
+    "LD_0x6B",
+    "LD_0x6C",
+    "LD_0x6D",
+    "LD_0x6E",
+    "LD_0x6F",
+    "LD_0x70",
+    "LD_0x71",
+    "LD_0x72",
+    "LD_0x73",
+    "LD_0x74",
+    "LD_0x75",
+    "HALT_0x76",
+    "LD_0x77",
+    "LD_0x78",
+    "LD_0x79",
+    "LD_0x7A",
+    "LD_0x7B",
+    "LD_0x7C",
+    "LD_0x7D",
+    "LD_0x7E",
+    "LD_0x7F",
+    "ADD_0x80",
+    "ADD_0x81",
+    "ADD_0x82",
+    "ADD_0x83",
+    "ADD_0x84",
+    "ADD_0x85",
+    "ADD_0x86",
+    "ADD_0x87",
+    "ADC_0x88",
+    "ADC_0x89",
+    "ADC_0x8A",
+    "ADC_0x8B",
+    "ADC_0x8C",
+    "ADC_0x8D",
+    "ADC_0x8E",
+    "ADC_0x8F",
+    "SUB_0x90",
+    "SUB_0x91",
+    "SUB_0x92",
+    "SUB_0x93",
+    "SUB_0x94",
+    "SUB_0x95",
+    "SUB_0x96",
+    "SUB_0x97",
+    "SBC_0x98",
+    "SBC_0x99",
+    "SBC_0x9A",
+    "SBC_0x9B",
+    "SBC_0x9C",
+    "SBC_0x9D",
+    "SBC_0x9E",
+    "SBC_0x9F",
+    "AND_0xA0",
+    "AND_0xA1",
+    "AND_0xA2",
+    "AND_0xA3",
+    "AND_0xA4",
+    "AND_0xA5",
+    "AND_0xA6",
+    "AND_0xA7",
+    "XOR_0xA8",
+    "XOR_0xA9",
+    "XOR_0xAA",
+    "XOR_0xAB",
+    "XOR_0xAC",
+    "XOR_0xAD",
+    "XOR_0xAE",
+    "XOR_0xAF",
+    "OR_0xB0",
+    "OR_0xB1",
+    "OR_0xB2",
+    "OR_0xB3",
+    "OR_0xB4",
+    "OR_0xB5",
+    "OR_0xB6",
+    "OR_0xB7",
+    "CP_0xB8",
+    "CP_0xB9",
+    "CP_0xBA",
+    "CP_0xBB",
+    "CP_0xBC",
+    "CP_0xBD",
+    "CP_0xBE",
+    "CP_0xBF",
+    "RET_0xC0",
+    "POP_0xC1",
+    "JP_0xC2",
+    "JP_0xC3",
+    "CALL_0xC4",
+    "PUSH_0xC5",
+    "ADD_0xC6",
+    "RST_0xC7",
+    "RET_0xC8",
+    "RET_0xC9",
+    "JP_0xCA",
+    "BAD",
+    "CALL_0xCC",
+    "CALL_0xCD",
+    "ADC_0xCE",
+    "RST_0xCF",
+    "RET_0xD0",
+    "POP_0xD1",
+    "JP_0xD2",
+    "BAD",
+    "CALL_0xD4",
+    "PUSH_0xD5",
+    "SUB_0xD6",
+    "RST_0xD7",
+    "RET_0xD8",
+    "RETI_0xD9",
+    "JP_0xDA",
+    "BAD",
+    "CALL_0xDC",
+    "BAD",
+    "SBC_0xDE",
+    "RST_0xDF",
+    "LDH_0xE0",
+    "POP_0xE1",
+    "LD_0xE2",
+    "BAD",
+    "BAD",
+    "PUSH_0xE5",
+    "AND_0xE6",
+    "RST_0xE7",
+    "ADD_0xE8",
+    "JP_0xE9",
+    "LD_0xEA",
+    "BAD",
+    "BAD",
+    "BAD",
+    "XOR_0xEE",
+    "RST_0xEF",
+    "LDH_0xF0",
+    "POP_0xF1",
+    "LD_0xF2",
+    "DI_0xF3",
+    "BAD",
+    "PUSH_0xF5",
+    "OR_0xF6",
+    "RST_0xF7",
+    "LD_0xF8",
+    "LD_0xF9",
+    "LD_0xFA",
+    "EI_0xFB",
+    "BAD",
+    "BAD",
+    "CP_0xFE",
+    "RST_0xFF",
+};
+
+uint8_t in_array(uint8_t *array, uint8_t target, uint8_t size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        // printf("%d: %02X\n",i, array[i]);
+        if (target == array[i])
+            return 1;
+    }
+    return 0;
+}
+
+void print_opcode(uint8_t opcode, uint16_t imm16, uint8_t imm8)
+{
+    if (in_array(two_byte_instructions, opcode, 23))
+    {
+        printf("OPCODE: %s, ARG: %02X\n", opcode_names[opcode], imm8);
+    }
+    else if (in_array(three_byte_instructions, opcode, 17))
+    {
+        printf("OPCODE: %s, ARG: %04X\n", opcode_names[opcode], imm16);
+    }
+    else
+    {
+        printf("OPCODE: %s\n", opcode_names[opcode]);
+    }
+}
+
+int halted = 0;
+
 // tell overflow at a given bit
 uint8_t tell_overflow(uint16_t a, uint16_t b, uint8_t cin, uint8_t bit)
 {
@@ -93,6 +381,8 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
     uint8_t prev_carry = 0;
     switch (opcode)
     {
+    case (0x00):
+        return 4;
     case (0x11):
         registers.DE_reg.DE = imm16;
         return 12;
@@ -367,27 +657,31 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
         registers.PC += ((int8_t)imm8);
         return 12;
     case (0x20):
-        if (!(registers.AF_reg.sub.F_reg.flags.z)){
+        if (!(registers.AF_reg.sub.F_reg.flags.z))
+        {
             registers.PC += ((int8_t)imm8);
-        return 12;
+            return 12;
         }
         return 8;
     case (0x28):
-        if ((registers.AF_reg.sub.F_reg.flags.z)){
+        if ((registers.AF_reg.sub.F_reg.flags.z))
+        {
             registers.PC += ((int8_t)imm8);
-        return 12;
+            return 12;
         }
         return 8;
     case (0x30):
-        if (!(registers.AF_reg.sub.F_reg.flags.c)){
+        if (!(registers.AF_reg.sub.F_reg.flags.c))
+        {
             registers.PC += ((int8_t)imm8);
-        return 12;
+            return 12;
         }
         return 8;
     case (0x38):
-        if ((registers.AF_reg.sub.F_reg.flags.c)){
+        if ((registers.AF_reg.sub.F_reg.flags.c))
+        {
             registers.PC += ((int8_t)imm8);
-        return 12;
+            return 12;
         }
         return 8;
     case (0x01):
@@ -541,7 +835,7 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
         write_memory(registers.HL_reg.HL, registers.BC_reg.sub.B);
         return 4;
     case (0x71):
-        write_memory(registers.HL_reg.HL ,registers.BC_reg.sub.C);
+        write_memory(registers.HL_reg.HL, registers.BC_reg.sub.C);
         return 4;
     case (0x72):
         write_memory(registers.HL_reg.HL, registers.DE_reg.sub.D);
@@ -556,6 +850,7 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
         write_memory(registers.HL_reg.HL, registers.HL_reg.sub.L);
         return 4;
     case (0x76):
+        halted = 1;
         printf("HALT HIT\n");
         return 4;
     case (0x77):
@@ -1301,22 +1596,23 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
         IME = 1;
         return 4;
     default:
-        printf("BAD OPCODE");
+        printf("BAD OPCODE: %d\n", opcode);
+        halted = 1;
         return -1;
     }
 }
 
-int main(void)
-{
-    uint16_t x = 0xEFFF;
-    uint16_t y = 0x1000;
-    uint8_t borrow = tell_borrow(x, y, 0);
-    printf("BORROW (0x%x - 0x%x): %d\n", x, y, borrow);
+// int main(void)
+// {
+//     uint16_t x = 0xEFFF;
+//     uint16_t y = 0x1000;
+//     uint8_t borrow = tell_borrow(x, y, 0);
+//     printf("BORROW (0x%x - 0x%x): %d\n", x, y, borrow);
 
-    no_prefix_opcodes(0x31, 500, 0);
-    printf("SP: %d\n", registers.SP);
-    no_prefix_opcodes(0x39, 500, 0);
-    no_prefix_opcodes(0x39, 500, 0);
-    no_prefix_opcodes(0x23, 0, 0);
-    printf("HL: %d\n", registers.HL_reg.HL);
-}
+//     no_prefix_opcodes(0x31, 500, 0);
+//     printf("SP: %d\n", registers.SP);
+//     no_prefix_opcodes(0x39, 500, 0);
+//     no_prefix_opcodes(0x39, 500, 0);
+//     no_prefix_opcodes(0x23, 0, 0);
+//     printf("HL: %d\n", registers.HL_reg.HL);
+// }
