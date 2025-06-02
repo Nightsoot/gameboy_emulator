@@ -27,7 +27,7 @@ int main(void)
             registers.PC += 2;
         }
         else if(in_array(three_byte_instructions, opcode, 17)){
-            imm16 = (ROM[registers.PC + 1] << 8) | (ROM[registers.PC + 2]);
+            imm16 = (ROM[registers.PC + 1]) | (ROM[registers.PC + 2] << 8);
             registers.PC += 3;
         }
         else{
