@@ -355,26 +355,6 @@ uint8_t tell_borrow(uint16_t a, uint16_t b, uint8_t bit)
     return BIT(borrow, bit);
 }
 
-uint8_t pop()
-{
-    return read_memory(registers.SP++);
-}
-
-uint8_t pop16()
-{
-    return (pop() << 8) | pop();
-}
-
-void push(uint8_t value)
-{
-    write_memory(registers.SP--, value);
-}
-
-void push16(uint16_t value)
-{
-    push((value & 0xFF00) >> 8);
-    push(value & 0x00FF);
-}
 
 uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
 {
@@ -852,6 +832,7 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
     case (0x76):
         halted = 1;
         printf("HALT HIT\n");
+        exit(-1);
         return 4;
     case (0x77):
         write_memory(registers.HL_reg.HL, registers.AF_reg.sub.A);
@@ -1597,7 +1578,7 @@ uint8_t no_prefix_opcodes(uint8_t opcode, uint16_t imm16, uint8_t imm8)
         return 4;
     default:
         printf("BAD OPCODE: %d\n", opcode);
-        halted = 1;
+        exit(-1);
         return -1;
     }
 }
